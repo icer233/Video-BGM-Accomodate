@@ -14,25 +14,15 @@ video_path=input()
 cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
 timef=10
+tmp=0
 try:
     os.system("rm -rf Music_Materials")
 except:
-    abc=114
+    tmp=0
 face_classifier = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 classifier=load_model('./model_v_47.hdf5')
 class_labels={0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Neutral', 5: 'Sad', 6: 'Surprise'}
 audios=['Killing In The Name','The Last Puzzle','Paris','Curly Wurly','仲夏夜','你不要难过','aLIEz ','Raining Blood','The Last Puzzle','Larkin-Mantis Lords','久石譲 - 風のとおり道','秋水长','穿越时空的思念','Counting Stars','Angel Of Death','The Last Puzzle','Belladonna','Funkytown','Canon in D Major','错位时空','Enemy']
-def delete_file(path):
-    if os.path.isfile(path):
-        try:
-            os.remove(path)
-        except OSError as e:
-            print(e)
-    elif os.path.isdir(path):
-        file_neme_list = os.listdir(path)
-        for file_name in file_neme_list:
-            file_path = os.path.join(path, file_name)
-            delete_file(file_path)
 def Emotion(img):    
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     faces = face_classifier.detectMultiScale(gray, 1.3, 5)
@@ -63,19 +53,18 @@ def GetMusic():
             index=0
             for j in values:
                 if result==j:
-                    index+=random.randint(0,2)*6
+                    index+=random.randint(0,2)*7
                     print(f"The person in the video is {result}, suggest using music {audios[int(index)]} from {round(timef/fps*pre,1)}s to {round(timef/fps*i,1)}s\n")
                     pre=i
                     shutil.copy('./Audios/'+audios[int(index)]+'.mp3','./Music_Materials/')
                     break
                 index+=1
-        
         elif i==imageNum:
             values=list(class_labels.values())
             index=0
             for j in values:
                 if result==j:
-                    index+=random.randint(0,2)*6
+                    index+=random.randint(0,2)*7
                     print(f"The person in the video is {result}, suggest using music {audios[int(index)]} from {round(timef/fps*pre,1)}s to {round(timef/fps*i,1)}s\n")
                     pre=i
                     shutil.copy('./Audios/'+audios[int(index)]+'.mp3','./Music_Materials/')
@@ -88,7 +77,7 @@ def GetMusic():
 try:
     os.mkdir('./Tmp')
 except:
-    a=0
+    tmp=0
 isOpened = cap.isOpened
 sum=0
 imageNum=0
@@ -110,11 +99,9 @@ print(imageNum)
 try:
     os.mkdir('./Music_Materials')
 except:
-    a=0
+    tmp=0
 GetMusic()
 try:
     os.system("rm -rf Tmp")
 except:
     os.system("del Tmp")
-
-
