@@ -1,45 +1,60 @@
-import os
+import os, stat
 import cv2
 import shutil
 import random
 from PIL import Image
 import numpy as np
-from keras.models import load_model
-from ctypes.wintypes import HACCEL
-from opcode import hascompare
-import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
-video_path=input()
+
+ # 错误回调函数，改变只读属性位，重新删除
+def remove_readonly(func, path, _): 
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+# 输入视频路径
+video_path=input("Enter the path to your video: ")
+
+# 导入视频
 cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
+
+# 每timef帧抽一帧
 timef=10
-tmp=0
-try:
-    os.system("rm -rf Music_Materials")
-except:
-    tmp=0
-face_classifier = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
-classifier=load_model('./model_v_47.hdf5')
+
+# 删除临时文件夹
+shutil.rmtree('Tmp', onerror=remove_readonly)
+shutil.rmtree('Music_Materials', onerror=remove_readonly)
+
+# 创建临时文件夹
+os.mkdir("./Tmp")
+os.mkdir("./Music_Materials")
+
+# 加载模型
+face_classifier = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+classifier=load_model("model_v_47.hdf5")
 class_labels={0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Neutral', 5: 'Sad', 6: 'Surprise'}
+
+# 导入歌曲
 audios=['Killing In The Name','The Last Puzzle','Paris','Curly Wurly','仲夏夜','你不要难过','aLIEz ','Raining Blood','The Last Puzzle','Larkin-Mantis Lords','久石譲 - 風のとおり道','秋水长','穿越时空的思念','Counting Stars','Angel Of Death','The Last Puzzle','Belladonna','Funkytown','Canon in D Major','错位时空','Enemy']
+
+# 判断情绪
 def Emotion(img):    
     gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     faces = face_classifier.detectMultiScale(gray, 1.3, 5)
-    try:
-        (x,y,w,h)=faces[0]
-        cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
-        face=roi_gray
-        roi = face.astype("float") / 255.0
-        roi = img_to_array(roi)
-        roi = np.expand_dims(roi, axis=0)
-        preds = classifier.predict(roi)[0]
-        label = class_labels[preds.argmax()]
-        return label
-    except:
-        a=0
+    (x,y,w,h)=faces[0]
+    cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    roi_gray = gray[y:y+h, x:x+w]
+    roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
+    face=roi_gray
+    roi = face.astype("float") / 255.0
+    roi = img_to_array(roi)
+    roi = np.expand_dims(roi, axis=0)
+    preds = classifier.predict(roi)[0]
+    label = class_labels[preds.argmax()]
+    return label
+
+# 选歌
 def GetMusic():
     pre=0
     pre_emotion=-1
@@ -74,10 +89,8 @@ def GetMusic():
         pro_emotion=pre_emotion
         pre_emotion=result
     print("All listed music files have been placed in the folder ""Music_Materials"".")
-try:
-    os.mkdir('./Tmp')
-except:
-    tmp=0
+
+# 抽帧
 isOpened = cap.isOpened
 sum=0
 imageNum=0
@@ -95,13 +108,5 @@ while (isOpened):
     elif frameState == False:
         break
 cap.release()
-print(imageNum)
-try:
-    os.mkdir('./Music_Materials')
-except:
-    tmp=0
+
 GetMusic()
-try:
-    os.system("rm -rf Tmp")
-except:
-    os.system("del Tmp")
